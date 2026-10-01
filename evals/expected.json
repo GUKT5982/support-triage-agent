@@ -1,0 +1,10 @@
+{
+  "T-001": {"urgency": ["critical"], "action": "escalate_to_human", "route_to": "billing",
+            "must_include_issue_types": ["billing"], "sentiment": ["angry"], "language": "en"},
+  "T-002": {"urgency": ["critical"], "action": "escalate_to_human", "route_to": "incident_response",
+            "must_include_issue_types": ["outage"], "sentiment": ["frustrated", "angry"], "language": "th",
+            "must_call_tools": ["check_service_status"]},
+  "T-003": {"urgency": ["low", "medium"], "action": ["auto_respond", "route_to_specialist"],
+            "must_include_issue_types": ["bug", "feature_request"], "sentiment": ["positive", "neutral"], "language": "en",
+            "must_cite_kb": ["KB-008"]}
+}
