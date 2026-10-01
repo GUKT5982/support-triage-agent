@@ -1,0 +1,47 @@
+[
+  {
+    "id": "C-001",
+    "name": "Alex Morgan",
+    "plan": "free",
+    "tenure_months": 4,
+    "seats": 1,
+    "region": "US",
+    "data_region": "us-east",
+    "previous_tickets": 0,
+    "subscription": {"current_plan": "free", "pending_upgrade": "pro", "upgrade_status": "provisioning_failed"},
+    "billing_events": [
+      {"type": "charge", "amount": 29.99, "currency": "USD", "status": "pending", "card_last4": "4242", "at": "3 hours ago"},
+      {"type": "charge", "amount": 29.99, "currency": "USD", "status": "pending", "card_last4": "1881", "at": "2 hours ago"},
+      {"type": "charge", "amount": 29.99, "currency": "USD", "status": "pending", "card_last4": "1881", "at": "1 hour ago"}
+    ]
+  },
+  {
+    "id": "C-002",
+    "name": "Siam Retail Co., Ltd.",
+    "plan": "enterprise",
+    "tenure_months": 8,
+    "seats": 45,
+    "region": "TH",
+    "data_region": "ap-southeast",
+    "previous_tickets": 3,
+    "previous_critical_tickets": 0,
+    "account_manager": "csm-asia@company.com",
+    "subscription": {"current_plan": "enterprise", "upgrade_status": null},
+    "billing_events": []
+  },
+  {
+    "id": "C-003",
+    "name": "Jamie Lee",
+    "plan": "pro",
+    "tenure_months": 5,
+    "seats": 1,
+    "region": "US",
+    "data_region": "us-east",
+    "previous_tickets": 0,
+    "usage": {"login_frequency": "daily", "client": "macOS desktop app v3.2.1"},
+    "subscription": {"current_plan": "pro", "upgrade_status": null},
+    "billing_events": [
+      {"type": "charge", "amount": 29.99, "currency": "USD", "status": "succeeded", "card_last4": "5550", "at": "12 days ago"}
+    ]
+  }
+]

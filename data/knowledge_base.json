@@ -1,0 +1,20 @@
+[
+  {"id": "KB-001", "title": "Upgrading from Free to Pro", "tags": ["billing", "upgrade", "pro", "payment"],
+   "content": "Upgrade from Settings > Billing. Pro access is activated automatically once the payment is captured, usually within 1 minute. If the plan still shows Free after a successful charge, the upgrade is stuck in provisioning and must be fixed by the Billing team."},
+  {"id": "KB-002", "title": "Pending charges and duplicate payment attempts", "tags": ["billing", "charge", "pending", "duplicate", "refund"],
+   "content": "Each upgrade attempt creates a card authorization that appears as a pending charge. Failed or duplicate authorizations are normally released by the bank within 3-5 business days. Only the Billing team can void authorizations or issue refunds; agents must not promise refund timelines."},
+  {"id": "KB-003", "title": "Refunds and chargeback policy", "tags": ["billing", "refund", "chargeback", "dispute"],
+   "content": "Refunds are issued by the Billing team. If a customer threatens a bank dispute, escalate to Billing immediately so the duplicate charges can be voided before the dispute is filed."},
+  {"id": "KB-004", "title": "Pro export features", "tags": ["pro", "export", "pdf", "presentation"],
+   "content": "Pro plans include high-resolution PDF and PPTX export. Billing can grant a temporary 24-hour Pro trial while a payment issue is investigated."},
+  {"id": "KB-005", "title": "Troubleshooting HTTP 500 errors", "tags": ["error", "500", "outage", "login", "access"],
+   "content": "A single user seeing HTTP 500 can try clearing cache or another browser. If multiple users, devices and browsers are affected, treat it as a service-side incident and escalate to Incident Response with the customer's data region."},
+  {"id": "KB-006", "title": "Status page and regional incidents", "tags": ["status", "region", "incident", "outage", "asia"],
+   "content": "status.company.com shows global status and may lag behind regional incidents. Always check internal regional monitoring before telling a customer that systems are operational."},
+  {"id": "KB-007", "title": "Appearance settings and dark mode", "tags": ["dark", "mode", "theme", "appearance", "settings"],
+   "content": "Settings > Appearance offers Light, Dark and System Default themes on web and desktop. Dark mode is available on all paid plans."},
+  {"id": "KB-008", "title": "Known issue: desktop app ignores macOS dark mode (v3.2.x)", "tags": ["dark", "mode", "macos", "desktop", "bug", "system", "theme"],
+   "content": "In macOS desktop app v3.2.x the Dark option is missing from Settings > Appearance and System Default does not follow the macOS appearance. Workaround: use the web app, which supports dark mode. Fix planned for v3.3. Engineering ticket ENG-2187."},
+  {"id": "KB-009", "title": "Submitting feature requests", "tags": ["feature", "request", "roadmap", "schedule"],
+   "content": "Feature requests are logged by the Product team. Thank the customer, confirm the request was recorded, and do not promise delivery dates. Scheduled theme switching is not currently supported."}
+]
