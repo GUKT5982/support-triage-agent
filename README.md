@@ -42,10 +42,15 @@ python -m evals.run_eval --runs 3
 | Variable | Default | Notes |
 |---|---|---|
 | `OPENAI_API_KEY` | - | required for `triage` and `evals` |
+| `OPENAI_BASE_URL` | OpenAI | set to use any OpenAI-compatible provider (Groq, Azure, local) |
 | `TRIAGE_MODEL` | `gpt-4.1-mini` | any chat model with tool calling |
 | `TRIAGE_TEMPERATURE` | `0` | leave empty for models that don't accept temperature |
 | `TRIAGE_MAX_STEPS` | `6` | max LLM turns before falling back to a human |
 | `TRIAGE_CONFIDENCE_THRESHOLD` | `0.7` | below this, auto-responses go to a human |
+
+Validated end to end with `openai/gpt-oss-120b` on Groq through the OpenAI-compatible endpoint; with
+an OpenAI key, just leave `OPENAI_BASE_URL` unset. A wrong key or model name stops the run with a
+clear message (exit code 2) instead of silently escalating every ticket.
 
 ## How it works
 
@@ -56,6 +61,8 @@ ticket ──► TriageAgent loop ───────────────�
             │   • search_knowledge_base                        unknown KB ids, ungrounded reply,
             │   • check_service_status                         low confidence, angry ≠ low
             └─ submit_triage(TriageResult)  ◄── schema-validated; errors fed back to the model
+                                                           + bugs/features → owners, no promises
+                                                             in hand-off replies
 ```
 
 1. The ticket thread is rendered as data (inside `<ticket_messages>`) after the system prompt.
@@ -104,4 +111,4 @@ WRITEUP.md            architecture decisions, risks, evaluation plan
 |---|---|---|
 | T-001 Free plan, 3 pending charges | critical, escalate to Billing | money taken, Pro not provisioned, 2-hour deadline, dispute threat |
 | T-002 Enterprise TH, HTTP 500 | critical, escalate to Incident Response, reply in Thai | whole org down; status page says OK but `check_service_status` shows 42% 5xx in ap-southeast |
-| T-003 Pro, dark mode | low, auto-respond with KB-008 workaround (or route), log feature request | known macOS app bug; earlier support reply was misleading; scheduling is a feature request |
+| T-003 Pro, dark mode | low, auto-respond with KB-008 workaround; follow-ups to Engineering + Product | known macOS app bug; earlier support reply was misleading; scheduling is a feature request |

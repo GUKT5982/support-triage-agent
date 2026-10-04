@@ -21,9 +21,13 @@
 | Risk | Mitigation |
 |---|---|
 | Under-classifying a critical ticket | Guardrail floors; urgency can only go up; eval tracks critical recall separately |
-| Hallucinated policy / refund promises | Prompt forbids promises not in KB; unknown KB ids removed; auto-reply requires citation |
+| Bot promises refunds/credits on a team's behalf (seen in a real run) | Hand-off replies scanned; a promise is replaced by a holding reply, original kept in the note |
+| Hallucinated policy | Unknown KB ids removed; auto-reply requires a KB citation |
+| Auto-reply says "we logged it" but nobody owns it | Bugs → Engineering, feature requests → Product as `follow_up_teams`, enforced by a rule |
+| Model misreads data (read 0.42 as 0.42%) | Tool outputs carry explicit units (`http_5xx_rate_pct`) |
 | Prompt injection in ticket text | Ticket wrapped as data; read-only tools; final routing enforced by rules, not the model |
 | Invalid / missing output, API timeout | Schema validation + retry; SDK retries; fallback = escalate to human |
+| Bad key / model name | Fails fast with a clear message; never mass-escalates tickets |
 | Status page or KB is stale (T-002, T-003) | Monitoring tool beats status page; prompt asks to flag KB contradictions internally |
 | Wrong language reply | Language extracted; reply-language check in eval; Thai prompt examples if needed |
 | Cost / latency | Max steps cap; small model by default; one KB search per issue |
