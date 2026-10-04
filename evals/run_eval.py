@@ -12,6 +12,8 @@ from pathlib import Path
 from triage.agent import TriageOutcome
 from triage.config import Settings
 from triage.factory import build_agent
+from triage.guardrails import PROMISE_PATTERNS
+from triage.llm import LLMConfigurationError
 
 EXPECTED = json.loads((Path(__file__).parent / "expected.json").read_text(encoding="utf-8"))
 
@@ -30,10 +32,16 @@ def check(outcome: TriageOutcome, exp: dict) -> dict[str, bool]:
         "language": r.language.lower().startswith(exp["language"]),
         "no_fallback": not outcome.fallback_used,
     }
+    if "must_not_include_issue_types" in exp:
+        checks["no_wrong_issue_types"] = not set(exp["must_not_include_issue_types"]) & {i.value for i in r.issue_types}
     if "route_to" in exp:
         checks["route_to"] = r.route_to is not None and r.route_to.value == exp["route_to"]
     if "must_call_tools" in exp:
         checks["tools"] = set(exp["must_call_tools"]) <= {c.name for c in outcome.trace}
+    if "must_follow_up" in exp:
+        checks["follow_ups"] = set(exp["must_follow_up"]) <= {t.value for t in r.follow_up_teams}
+    if exp.get("no_promises"):
+        checks["no_promises"] = not PROMISE_PATTERNS.search(r.customer_reply)
     if "must_cite_kb" in exp:
         checks["kb_grounding"] = set(exp["must_cite_kb"]) <= set(r.kb_article_ids)
     # How often the raw LLM was already right (guardrails didn't have to save it).
@@ -66,4 +74,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except LLMConfigurationError as exc:
+        raise SystemExit(f"Configuration error: {exc}")

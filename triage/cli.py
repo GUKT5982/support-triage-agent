@@ -7,6 +7,7 @@ import sys
 from triage.agent import TriageOutcome
 from triage.config import Settings
 from triage.factory import build_agent
+from triage.llm import LLMConfigurationError
 from triage.models import Ticket
 
 
@@ -52,6 +53,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trace", action="store_true", help="Show tool calls.")
     args = parser.parse_args(argv)
 
+    try:
+        return _run(args)
+    except LLMConfigurationError as exc:
+        print(f"Configuration error: {exc}", file=sys.stderr)
+        return 2
+
+
+def _run(args: argparse.Namespace) -> int:
     agent, store = build_agent(Settings.from_env())
 
     if args.file:

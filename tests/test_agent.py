@@ -9,7 +9,7 @@ from tests.factories import make_result
 from triage.agent import SUBMIT_TOOL_NAME
 from triage.config import PROJECT_ROOT, Settings
 from triage.factory import build_agent
-from triage.llm import AssistantTurn, ToolCall
+from triage.llm import AssistantTurn, LLMConfigurationError, ToolCall
 from triage.models import Action, IssueType, Team, TriageResult
 
 
@@ -86,3 +86,24 @@ def test_falls_back_when_llm_api_errors(tickets):
 def test_submit_schema_requires_route_for_handoff():
     with pytest.raises(ValidationError):
         TriageResult(**{**make_result().model_dump(), "action": "escalate_to_human", "route_to": None})
+
+
+def test_configuration_errors_stop_the_run_instead_of_falling_back(tickets):
+    class BadKey:
+        def complete(self, *_):
+            raise LLMConfigurationError("API key rejected (401)")
+
+    agent, _ = build_agent(Settings(data_dir=PROJECT_ROOT / "data"), client=BadKey())
+    with pytest.raises(LLMConfigurationError):
+        agent.triage(tickets["T-001"])
+
+
+def test_cli_reports_configuration_error_with_exit_code(monkeypatch, capsys):
+    from triage import cli
+
+    def broken_build(*_a, **_k):
+        raise LLMConfigurationError("API key rejected (401)")
+
+    monkeypatch.setattr(cli, "build_agent", broken_build)
+    assert cli.main(["--ticket", "T-001"]) == 2
+    assert "Configuration error" in capsys.readouterr().err

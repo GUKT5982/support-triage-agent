@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from triage.data_store import MockDataStore
 from triage.guardrails import GuardrailContext, GuardrailEngine
-from triage.llm import ChatClient
+from triage.llm import ChatClient, LLMConfigurationError
 from triage.models import Action, IssueType, Sentiment, Team, Ticket, TriageResult, Urgency
 from triage.tools.base import ToolRegistry, inline_refs
 
@@ -89,7 +89,9 @@ class TriageAgent:
         for _ in range(self._max_steps):
             try:
                 turn = self._client.complete(messages, tool_schemas)
-            except Exception as exc:  # network / API errors after SDK retries
+            except LLMConfigurationError:
+                raise  # setup problem: stop the whole run instead of escalating every ticket
+            except Exception as exc:  # transient network / API errors after SDK retries
                 return None, f"LLM call failed: {exc}"
             if not turn.tool_calls:
                 messages.append({"role": "assistant", "content": turn.content or ""})
