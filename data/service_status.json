@@ -3,8 +3,8 @@
   "region_aliases": {"asia": "ap-southeast", "th": "ap-southeast", "thailand": "ap-southeast", "sea": "ap-southeast",
                       "us": "us-east", "usa": "us-east", "eu": "eu-west", "europe": "eu-west"},
   "regions": {
-    "ap-southeast": {"public_status": "operational", "monitoring": {"http_5xx_rate": 0.42, "p95_latency_ms": 8700, "window": "last 2h"}, "open_incidents": []},
-    "us-east": {"public_status": "operational", "monitoring": {"http_5xx_rate": 0.002, "p95_latency_ms": 310, "window": "last 2h"}, "open_incidents": []},
-    "eu-west": {"public_status": "operational", "monitoring": {"http_5xx_rate": 0.001, "p95_latency_ms": 290, "window": "last 2h"}, "open_incidents": []}
+    "ap-southeast": {"public_status": "operational", "monitoring": {"http_5xx_rate_pct": 42.0, "p95_latency_ms": 8700, "window": "last 2h"}, "open_incidents": []},
+    "us-east": {"public_status": "operational", "monitoring": {"http_5xx_rate_pct": 0.2, "p95_latency_ms": 310, "window": "last 2h"}, "open_incidents": []},
+    "eu-west": {"public_status": "operational", "monitoring": {"http_5xx_rate_pct": 0.1, "p95_latency_ms": 290, "window": "last 2h"}, "open_incidents": []}
   }
 }

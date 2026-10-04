@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from triage.data_store import MockDataStore
 from triage.tools.base import Tool
 
-ERROR_RATE_ANOMALY_THRESHOLD = 0.05  # >5% HTTP 5xx = something is wrong regardless of the status page
+ERROR_RATE_ANOMALY_THRESHOLD_PCT = 5.0  # >5% of requests failing with 5xx = something is wrong regardless of the status page
 
 
 class ServiceStatusParams(BaseModel):
@@ -29,7 +29,7 @@ class CheckServiceStatusTool(Tool):
         if data is None:
             return {"error": f"Unknown region '{params.region}'. Known: {sorted(status['regions'])}"}
 
-        anomaly = data["monitoring"]["http_5xx_rate"] > ERROR_RATE_ANOMALY_THRESHOLD
+        anomaly = data["monitoring"]["http_5xx_rate_pct"] > ERROR_RATE_ANOMALY_THRESHOLD_PCT
         return {
             "region": region,
             "public_status_page": status["public_status_page"]["overall"],
