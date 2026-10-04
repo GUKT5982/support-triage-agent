@@ -49,6 +49,7 @@ class Action(str, Enum):
 class Team(str, Enum):
     BILLING = "billing"
     TECHNICAL_SUPPORT = "technical_support"
+    ENGINEERING = "engineering"
     INCIDENT_RESPONSE = "incident_response"
     PRODUCT = "product"
     CUSTOMER_SUCCESS = "customer_success"
@@ -103,6 +104,11 @@ class TriageResult(BaseModel):
     kb_article_ids: list[str] = Field(default_factory=list, description="IDs of knowledge base articles used.")
     action: Action
     route_to: Team | None = Field(default=None, description="Required unless action is auto_respond.")
+    follow_up_teams: list[Team] = Field(
+        default_factory=list,
+        description="Teams that must still act on part of the ticket (e.g. engineering for a bug, product for a "
+                    "feature request), even when the customer reply is automatic.",
+    )
     action_reason: str
     customer_reply: str = Field(description="Reply to send (auto_respond) or holding reply (otherwise), in the customer's language.")
     internal_note: str = Field(description="Note for the receiving team: what was checked, what to do next.")

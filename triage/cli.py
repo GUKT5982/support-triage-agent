@@ -20,6 +20,7 @@ def format_outcome(o: TriageOutcome, show_trace: bool) -> str:
         f"Issue      : {r.primary_issue.value} (all: {', '.join(i.value for i in r.issue_types)}) | area: {r.product_area}",
         f"Sentiment  : {r.sentiment.value} | language: {r.language} | confidence: {r.confidence:.2f}",
         f"Action     : {r.action.value}" + (f" -> {r.route_to.value}" if r.route_to else "") + f"  - {r.action_reason}",
+        f"Follow-ups : {', '.join(t.value for t in r.follow_up_teams) or '-'}",
         f"KB used    : {', '.join(r.kb_article_ids) or '-'}",
         f"Guardrails : {', '.join(o.guardrails_fired) or '-'}",
         f"Summary    : {r.summary}",

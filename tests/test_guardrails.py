@@ -26,7 +26,8 @@ def test_enterprise_outage_pages_incident_response(store, tickets):
 
 def test_correct_low_risk_decision_is_untouched(store, tickets):
     proposed = make_result(kb_article_ids=["KB-008"], issue_types=[IssueType.BUG, IssueType.FEATURE_REQUEST],
-                           primary_issue=IssueType.BUG, sentiment=Sentiment.POSITIVE)
+                           primary_issue=IssueType.BUG, sentiment=Sentiment.POSITIVE,
+                           follow_up_teams=[Team.ENGINEERING, Team.PRODUCT])
     result, fired = engine.enforce(proposed, ctx(store, tickets["T-003"]))
     assert fired == [] and result == proposed
 
@@ -53,3 +54,37 @@ def test_guardrails_never_lower_urgency(store, tickets):
                            action=Action.ESCALATE_TO_HUMAN, route_to=Team.INCIDENT_RESPONSE)
     result, _ = engine.enforce(proposed, ctx(store, tickets["T-002"]))
     assert result.urgency == Urgency.CRITICAL
+
+
+def test_auto_reply_still_sends_bug_and_feature_request_to_owners(store, tickets):
+    proposed = make_result(kb_article_ids=["KB-008"], issue_types=[IssueType.BUG, IssueType.FEATURE_REQUEST],
+                           primary_issue=IssueType.BUG)
+    result, fired = engine.enforce(proposed, ctx(store, tickets["T-003"]))
+    assert fired == ["follow_up_owners"]
+    assert result.action == Action.AUTO_RESPOND
+    assert result.follow_up_teams == [Team.ENGINEERING, Team.PRODUCT]
+
+
+def test_hand_off_reply_with_refund_promise_is_replaced(store, tickets):
+    proposed = make_result(primary_issue=IssueType.BILLING, issue_types=[IssueType.BILLING],
+                           customer_reply="Billing will refund you and grant temporary Pro access.")
+    result, fired = engine.enforce(proposed, ctx(store, tickets["T-001"]))
+    assert fired[-1] == "no_promises_in_hand_off"
+    assert "refund" not in result.customer_reply.lower() and "billing team" in result.customer_reply
+    assert "Original draft" in result.internal_note
+
+
+def test_holding_reply_uses_customer_language(store, tickets):
+    proposed = make_result(primary_issue=IssueType.OUTAGE, issue_types=[IssueType.OUTAGE], language="th",
+                           action=Action.ESCALATE_TO_HUMAN, route_to=Team.INCIDENT_RESPONSE,
+                           customer_reply="เราจะคืนเงินให้")
+    result, _ = engine.enforce(proposed, ctx(store, tickets["T-002"]))
+    assert result.customer_reply.startswith("ขออภัย")
+
+
+def test_holding_reply_without_promises_is_kept(store, tickets):
+    proposed = make_result(primary_issue=IssueType.BILLING, issue_types=[IssueType.BILLING],
+                           customer_reply="Our Billing team is looking at the charges now.")
+    result, fired = engine.enforce(proposed, ctx(store, tickets["T-001"]))
+    assert "no_promises_in_hand_off" not in fired
+    assert result.customer_reply == proposed.customer_reply
