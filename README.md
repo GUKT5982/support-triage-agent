@@ -1,114 +1,118 @@
 # Support Ticket Triage Agent
 
-An LLM agent (OpenAI tool calling) that triages support tickets: classifies urgency, extracts
-key information, searches a knowledge base, and decides whether to auto-respond, route to a
-specialist, or escalate to a human. Deterministic guardrails enforce business policy on top of
-the model's decision.
+เอเจนต์ LLM (OpenAI tool calling) สำหรับคัดกรอง ticket ซัพพอร์ต: ประเมินความเร่งด่วน สรุปข้อมูลสำคัญ
+ค้นฐานความรู้ แล้วตัดสินใจว่าจะตอบอัตโนมัติ ส่งต่อผู้เชี่ยวชาญ หรือส่งให้คนดูแล
+โดยมี guardrail ที่เป็นกฎตายตัวตรวจผลของโมเดลอีกชั้นหนึ่ง
 
-## Quick start
+## 1. ติดตั้ง
 
-Requires Python 3.10+.
+ต้องมี Python 3.10 ขึ้นไป เปิดเทอร์มินัลในโฟลเดอร์โปรเจกต์แล้วรัน:
 
-```bash
-python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                                  # then put your key in OPENAI_API_KEY
+copy .env.example .env
 ```
 
-Run the three sample tickets:
+ถ้า PowerShell ไม่ยอมให้รัน `activate` ให้รัน `Set-ExecutionPolicy -Scope Process RemoteSigned` ก่อนหนึ่งครั้ง
+
+### macOS / Linux
 
 ```bash
-python -m triage                 # all sample tickets, human-readable
-python -m triage --ticket T-002  # one ticket
-python -m triage --trace         # also show every tool call
-python -m triage --json          # machine-readable output
-python -m triage --file my_ticket.json   # your own ticket(s), same shape as data/tickets.json
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-Tests (offline, no API key; the LLM is replaced by a scripted fake):
+## 2. รันเทส (ยังไม่ต้องมี API key)
 
 ```bash
 pytest
 ```
 
-Evaluation against labelled expectations (uses the real model):
+เทสทำงานแบบออฟไลน์โดยใช้ LLM ปลอม ถ้าขึ้น `passed` ทั้งหมดแปลว่าติดตั้งถูกต้อง
+
+## 3. ใส่ API key
+
+เปิดไฟล์ `.env` แล้วใส่ key ต่อท้าย `OPENAI_API_KEY=`
+
+ใส่ใน `.env` เท่านั้น อย่าใส่ใน `.env.example` เพราะไฟล์นั้นถูกเก็บขึ้น git
+
+ถ้าใช้ key ของ Groq (ขึ้นต้นด้วย `gsk_`) ให้ตั้งสองบรรทัดนี้ใน `.env` ด้วย:
+
+```ini
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+TRIAGE_MODEL=openai/gpt-oss-120b
+```
+
+## 4. ใช้งาน
+
+```bash
+python -m triage                         # ticket ตัวอย่างทั้ง 3 ใบ
+python -m triage --ticket T-002          # ใบเดียว
+python -m triage --trace                 # แสดง tool ที่โมเดลเรียกด้วย
+python -m triage --json                  # ผลลัพธ์เป็น JSON
+python -m triage --file my_ticket.json   # ticket ของคุณเอง รูปแบบเดียวกับ data/tickets.json
+```
+
+วัดผลเทียบกับคำตอบที่คาดไว้ (เรียกโมเดลจริง รันซ้ำ 3 รอบเพื่อดูความสม่ำเสมอ):
 
 ```bash
 python -m evals.run_eval --runs 3
 ```
 
-### Configuration (`.env`)
+- ถ้า key หรือชื่อโมเดลผิด โปรแกรมจะหยุดทันทีพร้อมข้อความ `Configuration error`
+  แทนที่จะส่งทุก ticket ให้คนแบบเงียบ ๆ
+- บน Windows ถ้าจะบันทึกผลลงไฟล์ (เช่น `> out.json`) ให้รัน `$env:PYTHONIOENCODING = "utf-8"` ก่อน
+  ไม่อย่างนั้นข้อความภาษาไทยจะทำให้เกิด `UnicodeEncodeError`
 
-| Variable | Default | Notes |
-|---|---|---|
-| `OPENAI_API_KEY` | - | required for `triage` and `evals` |
-| `OPENAI_BASE_URL` | OpenAI | set to use any OpenAI-compatible provider (Groq, Azure, local) |
-| `TRIAGE_MODEL` | `gpt-4.1-mini` | any chat model with tool calling |
-| `TRIAGE_TEMPERATURE` | `0` | leave empty for models that don't accept temperature |
-| `TRIAGE_MAX_STEPS` | `6` | max LLM turns before falling back to a human |
-| `TRIAGE_CONFIDENCE_THRESHOLD` | `0.7` | below this, auto-responses go to a human |
+## ตั้งค่า (`.env`)
 
-Validated end to end with `openai/gpt-oss-120b` on Groq through the OpenAI-compatible endpoint; with
-an OpenAI key, just leave `OPENAI_BASE_URL` unset. A wrong key or model name stops the run with a
-clear message (exit code 2) instead of silently escalating every ticket.
+| ตัวแปร | ค่าเริ่มต้น | ความหมาย |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | - | จำเป็นสำหรับ `triage` และ `evals` |
+| `OPENAI_BASE_URL` | OpenAI | ตั้งเมื่อใช้ผู้ให้บริการอื่นที่เข้ากันได้กับ OpenAI (Groq, Azure, โมเดลในเครื่อง) |
+| `TRIAGE_MODEL` | `gpt-4.1-mini` | โมเดลแชตตัวใดก็ได้ที่รองรับ tool calling |
+| `TRIAGE_TEMPERATURE` | `0` | เว้นว่างไว้สำหรับโมเดลที่ไม่รับค่า temperature |
+| `TRIAGE_MAX_STEPS` | `6` | จำนวนรอบสูงสุดที่เรียก LLM ก่อนส่งให้คน |
+| `TRIAGE_CONFIDENCE_THRESHOLD` | `0.7` | ความมั่นใจต่ำกว่านี้จะไม่ตอบอัตโนมัติ แต่ส่งให้คน |
 
-## How it works
+ทดสอบจริงแล้วกับ `openai/gpt-oss-120b` บน Groq ถ้าใช้ key ของ OpenAI ไม่ต้องตั้ง `OPENAI_BASE_URL`
 
-```
-ticket ──► TriageAgent loop ──────────────────────────────► GuardrailEngine ──► TriageOutcome
-            │  LLM chooses tools (tool_choice=required)        deterministic rules:
-            │   • get_customer_history                         money at risk, enterprise outage,
-            │   • search_knowledge_base                        unknown KB ids, ungrounded reply,
-            │   • check_service_status                         low confidence, angry ≠ low
-            └─ submit_triage(TriageResult)  ◄── schema-validated; errors fed back to the model
-                                                           + bugs/features → owners, no promises
-                                                             in hand-off replies
-```
+## หลักการทำงาน
 
-1. The ticket thread is rendered as data (inside `<ticket_messages>`) after the system prompt.
-2. The model must call a tool every turn and finishes by calling `submit_triage`, whose
-   parameters are the JSON schema of the Pydantic `TriageResult` model.
-3. Invalid submissions are returned to the model with the validation error so it can fix them.
-4. If the model never submits, or the API fails, a safe fallback escalates the ticket to a human.
-5. Guardrails apply policy that must not depend on the model. Rules can only make a decision safer
-   (raise urgency or hand off to a human). Both the model's proposal and the final result are kept,
-   so you can measure how often guardrails had to intervene.
+1. ข้อความใน ticket ถูกส่งให้โมเดลในฐานะข้อมูล (ครอบด้วย `<ticket_messages>`) ไม่ใช่คำสั่ง
+2. โมเดลต้องเรียก tool ทุกรอบ ได้แก่ `get_customer_history`, `search_knowledge_base`,
+   `check_service_status` แล้วจบด้วย `submit_triage` ซึ่งใช้ schema ของ `TriageResult`
+3. ถ้าผลที่ส่งมาไม่ผ่าน schema ระบบจะส่ง error กลับให้โมเดลแก้เอง
+4. ถ้าโมเดลไม่ส่งผล หรือ API ล้มเหลว ระบบจะ fallback โดยส่ง ticket ให้คน
+5. Guardrail ตรวจผลอีกรอบด้วยกฎที่ไม่ขึ้นกับโมเดล:
+   - เงินของลูกค้ามีความเสี่ยง → Billing
+   - ลูกค้า enterprise ใช้งานไม่ได้ → Incident Response
+   - คำตอบอัตโนมัติต้องอ้างบทความ KB ที่มีอยู่จริง และความมั่นใจต้องถึงเกณฑ์
+   - บั๊กและ feature request ต้องถึงทีมเจ้าของ (`follow_up_teams`)
+   - ข้อความตอบตอนส่งต่อ ห้ามสัญญาคืนเงินหรือให้สิทธิ์แทนทีมอื่น
 
-## Project structure
+ระบบเก็บทั้งผลที่โมเดลเสนอและผลสุดท้ายไว้ จึงวัดได้ว่า guardrail ต้องเข้ามาแก้บ่อยแค่ไหน
 
-```
+## โครงสร้างโปรเจกต์
+
+```text
 triage/
-  agent.py            agent loop, submit tool, fallback
-  guardrails.py       post-LLM business rules
-  models.py           Pydantic domain + output models (single source of truth for schemas)
-  llm.py              ChatClient protocol + OpenAI adapter
-  tools/              one file per tool; base.py has Tool + ToolRegistry
+  agent.py            ลูปของเอเจนต์, submit tool, fallback
+  guardrails.py       กฎธุรกิจที่ตรวจหลัง LLM
+  models.py           โมเดล Pydantic (ต้นทางเดียวของ schema ทั้งหมด)
+  llm.py              ChatClient protocol + ตัวเชื่อม OpenAI
+  tools/              tool ละหนึ่งไฟล์; base.py มี Tool + ToolRegistry
   prompts/system_prompt.md
-  data_store.py       mock CRM / KB / monitoring (JSON in data/)
-  factory.py          wires everything together
-  cli.py              terminal interface
-data/                 sample tickets, customers, knowledge base, service status
-evals/                expected labels + eval runner
-tests/                offline unit tests (tools, guardrails, agent loop)
-WRITEUP.md            architecture decisions, risks, evaluation plan
+  data_store.py       CRM / KB / monitoring จำลอง (JSON ใน data/)
+  factory.py          ประกอบทุกส่วนเข้าด้วยกัน
+  cli.py              คำสั่งในเทอร์มินัล
+data/                 ticket ตัวอย่าง, ลูกค้า, ฐานความรู้, สถานะบริการ
+evals/                คำตอบที่คาดไว้ + ตัวรัน eval
+tests/                unit test แบบออฟไลน์
+WRITEUP.md            การตัดสินใจด้านสถาปัตยกรรม ความเสี่ยง แผนการวัดผล
 ```
-
-## Extending
-
-- **New tool**: create `triage/tools/my_tool.py` with a `Params` Pydantic model and a `run()`
-  method, then add it to `default_tools()` in `triage/tools/__init__.py`. The schema sent to the
-  model is generated from `Params`.
-- **New policy rule**: add a class with `name` and `apply(result, ctx)` in `guardrails.py`, then
-  add it to `default_rules()`.
-- **Real backends**: replace `MockDataStore` (or individual tools) with CRM / vector search /
-  monitoring clients; the agent does not change.
-- **Another LLM vendor**: implement `ChatClient.complete()` in `llm.py`.
-- **API instead of CLI**: wrap `build_agent(...)[0].triage(ticket)` in a FastAPI endpoint.
-
-## Sample tickets: expected behaviour
-
-| Ticket | Expected | Why |
-|---|---|---|
-| T-001 Free plan, 3 pending charges | critical, escalate to Billing | money taken, Pro not provisioned, 2-hour deadline, dispute threat |
-| T-002 Enterprise TH, HTTP 500 | critical, escalate to Incident Response, reply in Thai | whole org down; status page says OK but `check_service_status` shows 42% 5xx in ap-southeast |
-| T-003 Pro, dark mode | low, auto-respond with KB-008 workaround; follow-ups to Engineering + Product | known macOS app bug; earlier support reply was misleading; scheduling is a feature request |
